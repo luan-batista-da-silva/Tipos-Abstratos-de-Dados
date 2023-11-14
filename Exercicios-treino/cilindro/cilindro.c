@@ -15,7 +15,6 @@ Cilindro* cilindro_create(float altura, float raio) {
         cilindro->h = altura;
         cilindro->r = raio;
     }
-
     return (cilindro);
 }
 
