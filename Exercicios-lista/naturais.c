@@ -103,7 +103,6 @@ int insereElementoConjunto(long int x, Conjunto *C) {
         C->elementos = (long int*)malloc(sizeof(long int));
         C->elementos[0] = x;
         C->size++;
-        printf("Elemento 1 = %ld\n", C->elementos[0]);
 
         return SUCESSO;
     } 
@@ -113,11 +112,6 @@ int insereElementoConjunto(long int x, Conjunto *C) {
         C->elementos[tamanho - 1] = x;
         C->size++;
         
-        puts("=== PRINTANDO OS ELEMENTOS ===");
-        for (int i = 0; i < tamanho; i++) {
-            printf("Elemento %d = %ld\n", i, C->elementos[i]);
-        }
-
         return SUCESSO;
     }
 
@@ -239,6 +233,143 @@ int conjuntosIdenticos(Conjunto* C1, Conjunto* C2) {
     }
 }
 
+// +---------------------------------------------+
+// | Verifica se C1 é subconjunto de C2          |
+// +---------------------------------------------+
+int subconjunto(Conjunto* C1, Conjunto* C2) {
+    int iguais = 0;
+    
+    for (int i = 0; i < C1->size; i++) {
+        for (int j = 0; j < C2->size; j++) {
+            if (C1->elementos[i] == C2->elementos[j]) {
+                iguais++;
+                continue;
+            }
+        }
+    }
+
+    if (iguais == C1->size) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+// +---------------------------------------------+
+// | Verifica se C1 é subconjunto de C2          |
+// +---------------------------------------------+
+Conjunto complemento(Conjunto* C1, Conjunto* C2) {
+    Conjunto* C3 = (Conjunto*)malloc(sizeof(Conjunto));
+    criaConjunto(C3);
+    int retorno = -1;
+    int iguais = 0;
+    long int x;
+
+    retorno = conjuntosIdenticos(C1, C2);
+    if (retorno == true) {
+        return *C3;
+    }
+    else {
+        for (int i = 0; i < C2->size; i++) {
+            for (int j = 0; j < C1->size; j++) {
+                if (C2->elementos[i] == C1->elementos[j]) {
+                    iguais++;
+                }
+                x = C2->elementos[i];
+            }
+            if (iguais == 0) {
+                insereElementoConjunto(x, C3);
+            }
+            iguais = 0;
+        }
+    }
+
+    return *C3;
+}
+
+// +---------------------------------------------+
+// | União de Dois Conjuntos                     |
+// +---------------------------------------------+
+Conjunto uniao(Conjunto* C1, Conjunto* C2) {
+    Conjunto* C3 = (Conjunto*)malloc(sizeof(Conjunto));
+    criaConjunto(C3);
+    int iguais = 0;
+    long int x;
+    int retorno = -1;
+
+    for (int i = 0; i < C1->size; i++) {
+        x = C1->elementos[i];
+        retorno = insereElementoConjunto(x, C3);
+
+        if (retorno == SUCESSO) {
+            printf("Elemento %ld adicionado ao Conjunto Uniao!\n", x);
+        }
+        else {
+            printf("Nao foi possivel adicionar o elemento %ld ao Conjunto Uniao!\n", x);
+        }
+    }
+
+    for (int i = 0; i < C2->size; i++) {
+        for (int j = 0; j < C1->size; j++) {
+            if (C2->elementos[i] == C1->elementos[j]) {
+                iguais++;
+            }
+            x = C2->elementos[i];
+        }
+        if (iguais == 0) {
+            retorno = insereElementoConjunto(x, C3);
+            if (retorno == SUCESSO) {
+                printf("Elemento %ld adicionado ao Conjunto Uniao!\n", x);
+            }
+            else {
+                printf("Nao foi possivel adicionar o elemento %ld ao Conjunto Uniao!\n", x);
+            }
+        }
+        else if (iguais > 0) {
+            retorno = excluirElementoConjunto(x, C3);
+            if (retorno == SUCESSO) {
+                printf("O elemento %ld foir excluido do Conjunto Uniao!\n", x);
+            }
+        }    
+    }
+
+    return *C3;
+}
+
+// +---------------------------------------------+
+// | Mostrando Conjuntos                         |
+// +---------------------------------------------+
+void mostraConjunto(Conjunto* C, int ordem) {
+    for (int i = 0; i < C->size; i++) {
+        printf("Elemento %d = %ld\n", i, C->elementos[i]);
+    }
+}
+
+// +---------------------------------------------+
+// | Interseccao de Conjuntos                    |
+// +---------------------------------------------+
+Conjunto interseccao(Conjunto* C1, Conjunto* C2) {
+    Conjunto* C3 = (Conjunto*)malloc(sizeof(Conjunto));
+    criaConjunto(C3);
+    long int x;
+    int retorno = -1;
+    
+    for (int i = 0; i < C1->size; i++) {
+        for (int j = 0; j < C2->size; j++) {
+            if (C1->elementos[i] == C2->elementos[j]) {
+                x = C1->elementos[i];
+                retorno = insereElementoConjunto(x, C3);
+                if (retorno == SUCESSO) {
+                    printf("O elemento %ld foi adicionado ao Conjunto Interseccao!\n", x);
+                }
+            }
+        }
+    }
+
+    return *C3;
+}
+
 
 
 // =============================================================
@@ -246,33 +377,41 @@ int conjuntosIdenticos(Conjunto* C1, Conjunto* C2) {
 // =============================================================
 
 int main () {
-    Conjunto *C1 = (Conjunto*)malloc(sizeof(Conjunto));;
-    Conjunto *C2 = (Conjunto*)malloc(sizeof(Conjunto));;
+    Conjunto *C1 = (Conjunto*)malloc(sizeof(Conjunto));
+    Conjunto *C2 = (Conjunto*)malloc(sizeof(Conjunto));
+    Conjunto comp;
+    Conjunto conjUniao;
+    Conjunto conjInter;
     int conjuntos = 0;
     int optionConj = 1;
     int operacao = 1;
     int retorno = -1;
     long int x;
-    int destroy;
+    int ordem;
 
     while (operacao != 0) {
         
 
-        puts("+-----------------------------------------------+");
-        puts("| Escolha a operacao a ser feita:               |");
-        puts("|                                               |");
-        puts("| 0 - Finalizar o programa                      |");
-        puts("| 1 - Criar conjunto vazio                      |");
-        puts("| 2 - Destruir o conjunto                       |");
-        puts("| 3 - Verificar se Conjunto e Vazio             |");
-        puts("| 4 - Adicionar um Elemento ao Conjunto         |");
-        puts("| 5 - Exclui um Elemento do Conjunto            |");
-        puts("| 6 - Cardinalidade do Conjunto                 |");
-        puts("| 7 - Quantos sao maiores que:                  |");
-        puts("| 8 - Quantos sao menores que:                  |");
-        puts("| 9 - Pertence ao Conjunto?                     |");
-        puts("| 10 - Comparar se dois Conjuntos sao identicos |");
-        puts("+-----------------------------------------------+");
+        puts("+-----------------------------------------------------+");
+        puts("| Escolha a operacao a ser feita:                     |");
+        puts("|                                                     |");
+        puts("| 0 - Finalizar o programa                            |");
+        puts("| 1 - Criar conjunto vazio                            |");
+        puts("| 2 - Verificar se Conjunto e Vazio                   |");
+        puts("| 3 - Adicionar um Elemento ao Conjunto               |");
+        puts("| 4 - Exclui um Elemento do Conjunto                  |");
+        puts("| 5 - Cardinalidade do Conjunto                       |");
+        puts("| 6 - Quantos sao maiores que:                        |");
+        puts("| 7 - Quantos sao menores que:                        |");
+        puts("| 8 - Pertence ao Conjunto?                           |");
+        puts("| 9 - Comparar se dois Conjuntos sao identicos        |");
+        puts("| 10 - Identificar se e Subconjunto                   |");
+        puts("| 11 - Gerar o complemento de C1 em relacao a C2      |"); 
+        puts("| 12 - Uniao dos conjuntos C1 e C2                    |");
+        puts("| 13 - Interseccao dos conjuntos C1 e C2              |");
+        puts("| 16 - Mostrar o Conjunto                             |"); 
+        puts("| 18 - Destruir o conjunto                            |");
+        puts("+-----------------------------------------------------+");
 
         scanf("%d", &operacao);
 
@@ -296,37 +435,9 @@ int main () {
                 }
                 break;
 
+            
+
             case 2:
-
-                if (conjuntos == 1) {
-                    retorno = destroiConjunto(C1);
-                }
-                else {
-                    printf("Qual Conjunto Deseja Destruir (1 para o C1 e 2 para o C2): ");
-                    scanf("%d", &optionConj);
-
-                    if (optionConj == 1) {
-                        retorno = destroiConjunto(C1);
-                    }
-                    else if (optionConj == 2) {
-                        retorno = destroiConjunto(C2);
-                    }
-                    else {
-                        puts("[ERROR] Esse conjunto nao existe!");
-                        puts("Por favor, insira o numero de um conjunto existente.\n");
-                    }
-                }
-
-                if (retorno == SUCESSO) {
-                    conjuntos--;
-                    printf("O conjunto C%d foi Destruido!\n\n", optionConj);
-                }
-                else if (retorno == FALHA) {
-                    puts("O conjunto nao foi Destruido!\n");
-                }
-                break;
-
-            case 3:
                 if (conjuntos == 1) {
                     retorno = conjuntoVazio(C1);
                 }
@@ -354,12 +465,11 @@ int main () {
                 }
                 break;
 
-            case 4:
+            case 3:
                 if (conjuntos == 1) {
                     printf("Digite o Elemento: ");
                     scanf("%ld", &x);
                     retorno = insereElementoConjunto(x, C1);
-                    puts("Elemento adicionado ao conjunto C1\n");
                 }
                 else {
                     printf("A qual conjunto deseja adicionar o elemento?  (1 para o C1 e 2 para o C2) ");
@@ -389,7 +499,7 @@ int main () {
                 }
                 break;
 
-            case 5:
+            case 4:
                 printf("Digite o Elemento a ser Excluido: ");
                 scanf("%ld", &x);
 
@@ -420,7 +530,7 @@ int main () {
                 }
                 break;
             
-            case 6:
+            case 5:
                 if (conjuntos == 1) {
                     retorno = tamanhoConjunto(C1);
                 }
@@ -445,7 +555,7 @@ int main () {
                 }
                 break;
             
-            case 7:
+            case 6:
                 printf("Digite o numero a ser comparado: ");
                 scanf("%ld", &x);
 
@@ -471,7 +581,7 @@ int main () {
                 printf("Temos %d elementos maiores que %ld no conjunto C%d! (0 indica que todos elementos sao maiores)\n\n", retorno, x, optionConj);
                 break;
             
-            case 8:
+            case 7:
                 printf("Digite o numero a ser comparado: ");
                 scanf("%ld", &x);
 
@@ -497,7 +607,7 @@ int main () {
                 printf("Temos %d elementos menores que %ld no conjunto C%d! (0 indica que todos elementos sao menores)\n\n", retorno, x, optionConj);
                 break;
 
-            case 9:
+            case 8:
                 printf("Digite o numero a ser analisado: ");
                 scanf("%ld", &x);
 
@@ -527,7 +637,7 @@ int main () {
                     printf("O elemento %ld nao pertence ao conjunto C%d!\n\n", x, optionConj);
                 }
                 break;
-            case 10:
+            case 9:
                 if (C1 != NULL && C2 != NULL) {
                     if (C1->elementos != NULL && C2->elementos != NULL) {
                         retorno = conjuntosIdenticos(C1, C2);
@@ -548,6 +658,125 @@ int main () {
                 }
                 break;
 
+            case 10:
+                if (conjuntos < 2) {
+                    puts("[ERROR] Nao existe dois conjunto a serem comparados!");
+                    puts("Por favor, crie dois conjuntos antes de compara-los!\n");
+                }
+                else {
+                    retorno = subconjunto(C1, C2);
+
+                    if (retorno == true) {
+                        printf("O conjunto C1 e subconjunto de C2!\n\n");
+                    }
+                    else {
+                        printf("O conjunto C1 nao e subconjunto de C2!\n\n");
+                    }
+                }
+                break;
+
+            case 11:
+                if (conjuntos < 2) {
+                    puts("[ERROR] Nao existe dois conjunto a serem comparados!");
+                    puts("Por favor, crie dois conjuntos antes de compara-los!\n");
+                }
+                else {
+                    comp = complemento(C1, C2);
+
+                    retorno = conjuntoVazio(&comp);
+                    if (retorno == true) {
+                        puts("O conjunto complemento e vazio!");
+                    }
+                    else {
+                        puts("O conjunto complemento nao e vazio!");
+                    }
+                }
+                break;
+            
+            case 12:
+                if (conjuntos < 2) {
+                    puts("[ERROR] Nao existe dois conjunto a serem comparados!");
+                    puts("Por favor, crie dois conjuntos antes de compara-los!\n");
+                }
+                else {
+                    conjUniao = uniao(C1, C2);
+
+                    retorno = conjuntoVazio(&uniao);
+                    if (retorno == true) {
+                        puts("O conjunto uniao e vazio!");
+                    }
+                    else {
+                        puts("O conjunto uniao nao e vazio!");
+                        puts("=== MOSTRANDO O CONJUNTO UNIAO ===");
+                        mostraConjunto(&conjUniao, 1);
+                    }
+                }
+                break;
+
+            case 13:
+                if (conjuntos < 2) {
+                    puts("[ERROR] Nao existe dois conjunto a serem comparados!");
+                    puts("Por favor, crie dois conjuntos antes de compara-los!\n");
+                }
+                else {
+                    conjInter = interseccao(C1, C2);
+
+                    retorno = conjuntoVazio(&conjInter);
+                    if (retorno == true) {
+                        puts("O conjunto Interseccao e vazio!");
+                    }
+                    else {
+                        puts("O conjunto Interseccao nao e vazio!");
+                        puts("=== MOSTRANDO O CONJUNTO INTERSECCAO ===");
+                        mostraConjunto(&conjInter, 1);
+                    }
+                }
+                break;
+
+            case 16:
+                if (conjuntos < 2) {
+                    printf("Insira a ordem a ser mostrada: (1 para Crescente e 2 para Decrescente) ");
+                    scanf("%d", &ordem);
+                    mostraConjunto(C1, ordem);
+                }
+                else {
+                    printf("Qual conjunto deseja mostrar? (Digite 1 para C1 e 2 para C2) ");
+                    scanf("%d", &optionConj);
+                    printf("Insira a ordem a ser mostrada: (1 para Crescente e 2 para Decrescente) ");
+                    scanf("%d", &ordem);
+                    if (optionConj == 1) {
+                        puts("=== MOSTRANDO CONJUNTO C1 ===");
+                        mostraConjunto(C1, ordem);
+                    }
+                    else if (optionConj == 2) {
+                        puts("=== MOSTRANDO CONJUNTO C2 ===");
+                        mostraConjunto(C2, ordem);
+                    }
+                    else {
+                        puts("[ERROR] Esse conjunto nao existe!");
+                        puts("Por favor, insira o numero de um conjunto existente.");
+                    }
+                }
+                break;
+
+            case 18:
+                if (conjuntos == 1) {
+                    retorno = destroiConjunto(C1);
+                }
+                else {
+                    retorno = destroiConjunto(C2);
+                    optionConj = 2;
+                }
+
+                if (retorno == SUCESSO) {
+                    conjuntos--;
+                    printf("O conjunto C%d foi Destruido!\n\n", optionConj);
+                }
+                else if (retorno == FALHA) {
+                    puts("O conjunto nao foi Destruido!\n");
+                }
+                break;
+
             default:
                 break;
         }
@@ -555,10 +784,6 @@ int main () {
         optionConj = 1;
         retorno = -1;
     }
-    
-    
-    // destroy = destroiConjunto(C1);
-    // destroy = destroiConjunto(C2);
 
     printf("Programa Finalizado!");
 
