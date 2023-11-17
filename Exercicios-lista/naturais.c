@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <limits.h>
+#include <math.h>
 
 #define SUCESSO 1
 #define FALHA 0
@@ -33,6 +34,7 @@ void mostraConjunto(Conjunto* C, int ordem);
 int copiarConjunto(Conjunto* C1, Conjunto* C2);
 int destroiConjunto(Conjunto* C);
 int compara(const void *x, const void *y);
+void geraSubconjuntos(int pos, Conjunto* C, Conjunto* subconjunto);
 
 
 // =============================================================
@@ -341,9 +343,29 @@ Conjunto uniao(Conjunto* C1, Conjunto* C2) {
 // | Mostrando Conjuntos                         |
 // +---------------------------------------------+
 void mostraConjunto(Conjunto* C, int ordem) {
-    for (int i = 0; i < C->size; i++) {
-        printf("Elemento %d = %ld\n", i, C->elementos[i]);
+    qsort(C->elementos, (size_t) C->size, sizeof(long int), compara);
+
+    if (ordem == 1) {
+        for (int i = 0; i < C->size; i++) {
+            printf("Elemento %d = %ld\n", i, C->elementos[i]);
+        }    
     }
+    else {
+        for (int i = C->size - 1; i >= 0; i--) {
+            printf("Elemento %d = %ld\n", i, C->elementos[i]);
+        }
+    }    
+}
+
+// Função auxiliar Compara
+int compara(const void *x, const void *y)
+{
+ if (*(int *)x > *(int *)y)
+    return 1;
+ else if (*(int *) x == *(int *) y )
+    return 0;
+ else if ( *(int *) x < *(int *) y )
+    return -1;
 }
 
 // +---------------------------------------------+
@@ -371,6 +393,96 @@ Conjunto interseccao(Conjunto* C1, Conjunto* C2) {
 }
 
 
+// +---------------------------------------------+
+// | Diferença de Conjuntos                      |
+// +---------------------------------------------+
+Conjunto diferenca(Conjunto* C1, Conjunto* C2) {
+    Conjunto* C3 = (Conjunto*)malloc(sizeof(Conjunto));
+    criaConjunto(C3);
+    long int x;
+    int iguais = 0;
+    int retorno = -1;
+    
+    for (int i = 0; i < C1->size; i++) {
+        for (int j = 0; j < C2->size; j++) {
+            x = C1->elementos[i];
+            if (C1->elementos[i] == C2->elementos[j]) {
+                iguais++;
+            }
+        }
+        if (iguais == 0) {
+            retorno = insereElementoConjunto(x, C3);
+            if (retorno == SUCESSO) {
+                printf("O elemento %ld foi adicionado ao Conjunto Diferenca!\n", x);
+            }
+        }
+        iguais = 0;
+    }
+
+    return *C3;
+}
+
+
+// +---------------------------------------------+
+// | Copiar Conjuntos -> C1 para C2              |
+// +---------------------------------------------+
+int copiarConjunto(Conjunto* C1, Conjunto* C2) {
+    int retorno = -1;
+    C2->elementos = (long int*)realloc(C2->elementos, C1->size * sizeof(long int));
+    C2->size = C1->size;
+
+    for (int i = 0; i < C1->size; i++) {
+        C2->elementos[i] = C1->elementos[i];
+    }
+
+    retorno = conjuntosIdenticos(C1, C2);
+    if (retorno == true) {
+        return SUCESSO;
+    }
+    else {
+        return FALHA;
+    }
+}
+
+// +---------------------------------------------+
+// | Mostrar o Conjunto das Partes               |
+// +---------------------------------------------+
+// Função auxiliar para gerar os subconjuntos de um conjunto C
+void geraSubconjuntos(int pos, Conjunto* C, Conjunto* subconjunto) {
+    static int countSubConj = 0;
+    if (pos == C->size) {
+        return;
+    }
+
+    puts("====================================");
+    if (countSubConj == 0) {
+        printf("========== SUBCONJUNTOS ============\n");
+        puts("====================================");
+        puts("Vazio");
+        puts("====================================");
+        countSubConj++;
+    }
+    insereElementoConjunto(C->elementos[pos], subconjunto);
+    
+    mostraConjunto(subconjunto, 1);
+
+    geraSubconjuntos(pos + 1, C, subconjunto);
+    excluirElementoConjunto(C->elementos[pos], subconjunto);
+
+    geraSubconjuntos(pos + 1, C, subconjunto);
+}
+
+// Função para gerar os subconjuntos de um conjunto C
+Conjunto conjuntoPartes(Conjunto* C) {
+    Conjunto subconjunto;
+    criaConjunto(&subconjunto);
+
+    geraSubconjuntos(0, C, &subconjunto);
+
+    return subconjunto;
+}
+
+
 
 // =============================================================
 // ================ ARQUIVO "naturaisMain.c" ===================
@@ -382,6 +494,8 @@ int main () {
     Conjunto comp;
     Conjunto conjUniao;
     Conjunto conjInter;
+    Conjunto conjDif;
+    Conjunto subConj;
     int conjuntos = 0;
     int optionConj = 1;
     int operacao = 1;
@@ -409,7 +523,10 @@ int main () {
         puts("| 11 - Gerar o complemento de C1 em relacao a C2      |"); 
         puts("| 12 - Uniao dos conjuntos C1 e C2                    |");
         puts("| 13 - Interseccao dos conjuntos C1 e C2              |");
-        puts("| 16 - Mostrar o Conjunto                             |"); 
+        puts("| 14 - Diferenca dos conjuntos C1 e C2                |");
+        puts("| 15 - Gerar o conjunto das Partes                    |");
+        puts("| 16 - Mostrar o Conjunto                             |");
+        puts("| 17 - Copiar C1 para C2                              |");
         puts("| 18 - Destruir o conjunto                            |");
         puts("+-----------------------------------------------------+");
 
@@ -701,7 +818,7 @@ int main () {
                 else {
                     conjUniao = uniao(C1, C2);
 
-                    retorno = conjuntoVazio(&uniao);
+                    retorno = conjuntoVazio(&conjUniao);
                     if (retorno == true) {
                         puts("O conjunto uniao e vazio!");
                     }
@@ -716,7 +833,7 @@ int main () {
             case 13:
                 if (conjuntos < 2) {
                     puts("[ERROR] Nao existe dois conjunto a serem comparados!");
-                    puts("Por favor, crie dois conjuntos antes de compara-los!\n");
+                    puts("Por favor, crie dois conjuntos antes de compara-los!\n"); 
                 }
                 else {
                     conjInter = interseccao(C1, C2);
@@ -729,6 +846,46 @@ int main () {
                         puts("O conjunto Interseccao nao e vazio!");
                         puts("=== MOSTRANDO O CONJUNTO INTERSECCAO ===");
                         mostraConjunto(&conjInter, 1);
+                    }
+                }
+                break;
+
+            case 14:
+                if (conjuntos < 2) {
+                    puts("[ERROR] Nao existe dois conjunto a serem comparados!");
+                    puts("Por favor, crie dois conjuntos antes de compara-los!\n"); 
+                }
+                else {
+                    conjDif = diferenca(C1, C2);
+
+                    retorno = conjuntoVazio(&conjDif);
+                    if (retorno == true) {
+                        puts("O conjunto Diferenca e vazio!");
+                    }
+                    else {
+                        puts("O conjunto Diferenca nao e vazio!");
+                        puts("=== MOSTRANDO O CONJUNTO DIFERENCA ===");
+                        mostraConjunto(&conjDif, 1);
+                    }
+                }
+                break;
+
+            case 15:
+                if (conjuntos == 1) {
+                    puts("==== CONJUNTOS DAS PARTES DE C1 ====");
+                    subConj = conjuntoPartes(C1);
+                }
+                else {
+                    printf("De qual conjunto deseja realizar a operacao? (Digite 1 para C1 e 2 para C2) ");
+                    scanf("%d", &optionConj);
+
+                    if (optionConj == 1) {
+                        puts("==== CONJUNTOS DAS PARTES DE C1 ====");
+                        subConj = conjuntoPartes(C1);
+                    }
+                    else if (optionConj == 2) {
+                        puts("==== CONJUNTOS DAS PARTES DE C2 ====");
+                        subConj = conjuntoPartes(C2);
                     }
                 }
                 break;
@@ -755,6 +912,27 @@ int main () {
                     else {
                         puts("[ERROR] Esse conjunto nao existe!");
                         puts("Por favor, insira o numero de um conjunto existente.");
+                    }
+                }
+                break;
+
+            case 17:
+                if (conjuntos < 2) {
+                    puts("[ERROR] Nao existe dois conjunto a serem copiados!");
+                    puts("Por favor, crie dois conjuntos antes de compara-los!\n"); 
+                }
+                else {
+                    retorno = copiarConjunto(C1, C2);
+
+                    if (retorno == FALHA) {
+                        puts("Nao foi possivel copiar os conjuntos!");
+                    }
+                    else {
+                        puts("Os conjuntos foram copiados!");
+                        puts("=== MOSTRANDO O CONJUNTO C1 ===");
+                        mostraConjunto(C1, 1);
+                        puts("=== MOSTRANDO O CONJUNTO C2 ===");
+                        mostraConjunto(C2, 1);
                     }
                 }
                 break;
