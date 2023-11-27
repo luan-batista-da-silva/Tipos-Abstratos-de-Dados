@@ -454,7 +454,7 @@ void geraSubconjuntos(int pos, Conjunto* C, Conjunto* subconjunto) {
         return;
     }
 
-    puts("====================================");
+    puts("====================================");   
     if (countSubConj == 0) {
         printf("========== SUBCONJUNTOS ============\n");
         puts("====================================");
@@ -502,6 +502,7 @@ int main () {
     int retorno = -1;
     long int x;
     int ordem;
+    int countDestroy = 0;
 
     while (operacao != 0) {
         
@@ -648,7 +649,11 @@ int main () {
                 break;
             
             case 5:
-                if (conjuntos == 1) {
+                if (conjuntos == 0) {
+                    puts("[ERROR] Nao existem conjuntos!");
+                    puts("Por favor, crie uma conjunto antes!");
+                }
+                else if (conjuntos == 1) {
                     retorno = tamanhoConjunto(C1);
                 }
                 else {
@@ -676,7 +681,11 @@ int main () {
                 printf("Digite o numero a ser comparado: ");
                 scanf("%ld", &x);
 
-                if (conjuntos == 1) {
+                if (conjuntos == 0) {
+                    puts("[ERROR] Nao existem conjuntos!");
+                    puts("Por favor, crie uma conjunto antes!");
+                }
+                else if (conjuntos == 1) {
                     retorno = maior(x, C1);
                 }
                 else {
@@ -702,7 +711,12 @@ int main () {
                 printf("Digite o numero a ser comparado: ");
                 scanf("%ld", &x);
 
-                if (conjuntos == 1) {
+
+                if (conjuntos == 0) {
+                    puts("[ERROR] Nao existem conjuntos!");
+                    puts("Por favor, crie uma conjunto antes!");
+                }
+                else if (conjuntos == 1) {
                     retorno = menor(x, C1);
                 }
                 else {
@@ -728,7 +742,11 @@ int main () {
                 printf("Digite o numero a ser analisado: ");
                 scanf("%ld", &x);
 
-                if (conjuntos == 1) {
+                if (conjuntos == 0) {
+                    puts("[ERROR] Nao existem conjuntos!");
+                    puts("Por favor, crie uma conjunto antes!");
+                }
+                else if (conjuntos == 1) {
                     retorno = pertenceConjunto(x, C1);
                 }
                 else {
@@ -767,7 +785,7 @@ int main () {
                     }
                     else {
                         puts("[ERROR] Nao ha elementos em um dos conjuntos!");
-                        puts("Por favor, conf   ira os elementos dos conjuntos.");
+                        puts("Por favor, confira os elementos dos conjuntos.");
                     }
                 }
                 else {
@@ -948,6 +966,7 @@ int main () {
 
                 if (retorno == SUCESSO) {
                     conjuntos--;
+                    countDestroy++;
                     printf("O conjunto C%d foi Destruido!\n\n", optionConj);
                 }
                 else if (retorno == FALHA) {
@@ -961,6 +980,16 @@ int main () {
 
         optionConj = 1;
         retorno = -1;
+    }
+
+    if (C1 != NULL) {
+        destroiConjunto(C1);
+        puts("Conjunto C1 destruido!");
+    }
+
+    if (C2 != NULL) {
+        destroiConjunto(C2);
+        puts("Conjunto C2 destruido!");
     }
 
     printf("Programa Finalizado!");
